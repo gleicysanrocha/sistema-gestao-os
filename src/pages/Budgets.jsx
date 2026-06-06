@@ -222,60 +222,62 @@ const Budgets = () => {
       </div>
 
       <div className="glass-panel" style={{ overflow: 'hidden' }}>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Categoria</th>
-              <th>Cliente</th>
-              <th>Projeto / Aparelho</th>
-              <th>Valor</th>
-              <th>Status</th>
-              <th style={{ textAlign: 'center' }}>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 && (
-              <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-secondary)' }}>Nenhum orçamento encontrado.</td></tr>
-            )}
-            {filtered.map(b => {
-              const cat = catInfo(b.category);
-              const Icon = cat?.icon;
-              return (
-                <tr key={b.uuid}>
-                  <td>#{b.id}</td>
-                  <td>
-                    {cat && (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem' }}>
-                        <Icon size={14} style={{ color: cat.color }} />
-                        <span style={{ color: cat.color, fontWeight: 500 }}>{cat.label}</span>
-                      </span>
-                    )}
-                  </td>
-                  <td>{b.clientName}</td>
-                  <td>{b.device}</td>
-                  <td style={{ fontWeight: 600 }}>R$ {(b.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                  <td>
-                    <span className={`status-badge ${b.status === 'Aprovado' ? 'status-concluido' : b.status === 'Recusado' ? 'status-pendente' : ''}`}
-                      style={b.status === 'Pendente' ? { background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' } : {}}>
-                      {b.status}
-                    </span>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-                      <button onClick={() => handlePrint(b)} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer' }} title="Imprimir Proposta"><FileText size={18} /></button>
-                      {b.status === 'Pendente' && (
-                        <button onClick={() => approveBudget(b)} style={{ background: 'none', border: 'none', color: 'var(--success-color)', cursor: 'pointer' }} title="Aprovar e Gerar OS"><CheckCircle size={18} /></button>
+        <div className="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Categoria</th>
+                <th>Cliente</th>
+                <th>Projeto / Aparelho</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th style={{ textAlign: 'center' }}>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 && (
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-secondary)' }}>Nenhum orçamento encontrado.</td></tr>
+              )}
+              {filtered.map(b => {
+                const cat = catInfo(b.category);
+                const Icon = cat?.icon;
+                return (
+                  <tr key={b.uuid}>
+                    <td>#{b.id}</td>
+                    <td>
+                      {cat && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem' }}>
+                          <Icon size={14} style={{ color: cat.color }} />
+                          <span style={{ color: cat.color, fontWeight: 500 }}>{cat.label}</span>
+                        </span>
                       )}
-                      <button onClick={() => openEdit(b)} style={{ background: 'none', border: 'none', color: 'var(--accent-color)', cursor: 'pointer' }}><Edit2 size={18} /></button>
-                      <button onClick={() => handleDelete(b.uuid)} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer' }}><Trash2 size={18} /></button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                    <td>{b.clientName}</td>
+                    <td>{b.device}</td>
+                    <td style={{ fontWeight: 600 }}>R$ {(b.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td>
+                      <span className={`status-badge ${b.status === 'Aprovado' ? 'status-concluido' : b.status === 'Recusado' ? 'status-pendente' : ''}`}
+                        style={b.status === 'Pendente' ? { background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' } : {}}>
+                        {b.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                        <button onClick={() => handlePrint(b)} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer' }} title="Imprimir Proposta"><FileText size={18} /></button>
+                        {b.status === 'Pendente' && (
+                          <button onClick={() => approveBudget(b)} style={{ background: 'none', border: 'none', color: 'var(--success-color)', cursor: 'pointer' }} title="Aprovar e Gerar OS"><CheckCircle size={18} /></button>
+                        )}
+                        <button onClick={() => openEdit(b)} style={{ background: 'none', border: 'none', color: 'var(--accent-color)', cursor: 'pointer' }}><Edit2 size={18} /></button>
+                        <button onClick={() => handleDelete(b.uuid)} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal */}
@@ -284,7 +286,7 @@ const Budgets = () => {
 
         {step === 1 ? (
           /* Step 1: Category picker */
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
+          <div className="grid-2">
             {CATEGORIES.map(c => {
               const Icon = c.icon;
               return (
@@ -314,7 +316,7 @@ const Budgets = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <input className="input-field" placeholder="Nome da Proposta (ex: Orçamento Site Institucional)" value={clientData.proposalName}
                   onChange={e => setClientData({ ...clientData, proposalName: e.target.value })} />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                <div className="grid-3">
                   <div>
                     <label style={{ display: 'block', marginBottom: 5, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Data da Proposta</label>
                     <input type="date" className="input-field" value={clientData.proposalDate}
@@ -359,7 +361,7 @@ const Budgets = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <input required className="input-field" placeholder="Nome do cliente *" value={clientData.clientName}
                   onChange={e => setClientData({ ...clientData, clientName: e.target.value })} />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="grid-2">
                   <input className="input-field" placeholder="Telefone" value={clientData.clientPhone}
                     onChange={e => setClientData({ ...clientData, clientPhone: e.target.value })} />
                   <input className="input-field" type="email" placeholder="E-mail" value={clientData.clientEmail}

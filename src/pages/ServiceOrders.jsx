@@ -209,83 +209,85 @@ const ServiceOrders = () => {
       </div>
 
       <div className="glass-panel" style={{ overflow: 'hidden' }}>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Cliente</th>
-              <th>Aparelho/Serviço</th>
-              <th>Status</th>
-              <th>Pagamento</th>
-              <th>Valor Total</th>
-              <th style={{ textAlign: 'center' }}>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredOrders.map((order) => (
-              <tr key={order.uuid}>
-                <td style={{ fontWeight: '500' }}>#{order.id}</td>
-                <td>{order.clientName}</td>
-                <td>
-                  <div>{order.device}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{order.category}</div>
-                </td>
-                <td>
-                  <span className={`status-badge ${order.status === 'Concluído' ? 'status-concluido' : order.status === 'Em Andamento' ? 'status-andamento' : 'status-pendente'}`}>
-                    {order.status}
-                  </span>
-                </td>
-                <td>
-                  <span className={`status-badge ${order.paymentStatus === 'Pago' ? 'status-concluido' : 'status-pendente'}`} style={{ fontSize: '0.75rem' }}>
-                    {order.paymentStatus}
-                  </span>
-                </td>
-                <td style={{ fontWeight: '600' }}>
-                  <div>R$ {(order.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                  {(order.partPurchaseValue > 0 || order.partPurchaseLocation || order.partPurchaseDate) && (
-                    <div 
-                      style={{ 
-                        fontSize: '0.72rem', 
-                        fontWeight: 'normal', 
-                        color: 'rgba(255,255,255,0.45)', 
-                        marginTop: '4px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '1px'
-                      }}
-                      title="Detalhes internos de compra da peça"
-                    >
-                      {order.partPurchaseValue > 0 && (
-                        <span style={{ color: '#fca5a5' }}>Custo: R$ {order.partPurchaseValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                      )}
-                      {(order.partPurchaseLocation || order.partPurchaseDate) && (
-                        <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)' }}>
-                          {order.partPurchaseLocation || 'N/A'} {order.partPurchaseDate ? `(${new Date(order.partPurchaseDate + 'T12:00:00').toLocaleDateString('pt-BR')})` : ''}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </td>
-                <td>
-                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                    <button onClick={() => handlePrint(order)} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer' }} title="Gerar PDF/Imprimir">
-                      <FileText size={18} />
-                    </button>
-                    <button onClick={() => sendWhatsApp(order)} style={{ background: 'none', border: 'none', color: '#25D366', cursor: 'pointer' }} title="Enviar via WhatsApp">
-                      <MessageSquare size={18} />
-                    </button>
-                    <button onClick={() => openEdit(order)} style={{ background: 'none', border: 'none', color: 'var(--accent-color)', cursor: 'pointer' }} title="Editar">
-                      <Edit2 size={18} />
-                    </button>
-                    <button onClick={() => handleDelete(order.uuid)} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer' }} title="Excluir">
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </td>
+        <div className="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Aparelho/Serviço</th>
+                <th>Status</th>
+                <th>Pagamento</th>
+                <th>Valor Total</th>
+                <th style={{ textAlign: 'center' }}>Ações</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredOrders.map((order) => (
+                <tr key={order.uuid}>
+                  <td style={{ fontWeight: '500' }}>#{order.id}</td>
+                  <td>{order.clientName}</td>
+                  <td>
+                    <div>{order.device}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{order.category}</div>
+                  </td>
+                  <td>
+                    <span className={`status-badge ${order.status === 'Concluído' ? 'status-concluido' : order.status === 'Em Andamento' ? 'status-andamento' : 'status-pendente'}`}>
+                      {order.status}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`status-badge ${order.paymentStatus === 'Pago' ? 'status-concluido' : order.paymentStatus === 'Pendente' ? 'status-pendente' : ''}`} style={{ fontSize: '0.75rem' }}>
+                      {order.paymentStatus}
+                    </span>
+                  </td>
+                  <td style={{ fontWeight: '600' }}>
+                    <div>R$ {(order.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                    {(order.partPurchaseValue > 0 || order.partPurchaseLocation || order.partPurchaseDate) && (
+                      <div 
+                        style={{ 
+                          fontSize: '0.72rem', 
+                          fontWeight: 'normal', 
+                          color: 'rgba(255,255,255,0.45)', 
+                          marginTop: '4px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '1px'
+                        }}
+                        title="Detalhes internos de compra da peça"
+                      >
+                        {order.partPurchaseValue > 0 && (
+                          <span style={{ color: '#fca5a5' }}>Custo: R$ {order.partPurchaseValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        )}
+                        {(order.partPurchaseLocation || order.partPurchaseDate) && (
+                          <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)' }}>
+                            {order.partPurchaseLocation || 'N/A'} {order.partPurchaseDate ? `(${new Date(order.partPurchaseDate + 'T12:00:00').toLocaleDateString('pt-BR')})` : ''}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                      <button onClick={() => handlePrint(order)} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer' }} title="Gerar PDF/Imprimir">
+                        <FileText size={18} />
+                      </button>
+                      <button onClick={() => sendWhatsApp(order)} style={{ background: 'none', border: 'none', color: '#25D366', cursor: 'pointer' }} title="Enviar via WhatsApp">
+                        <MessageSquare size={18} />
+                      </button>
+                      <button onClick={() => openEdit(order)} style={{ background: 'none', border: 'none', color: 'var(--accent-color)', cursor: 'pointer' }} title="Editar">
+                        <Edit2 size={18} />
+                      </button>
+                      <button onClick={() => handleDelete(order.uuid)} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer' }} title="Excluir">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <Modal isOpen={isModalOpen} onClose={closeModal} title={editingUuid ? "Editar Ordem de Serviço" : "Nova Ordem de Serviço"}>
@@ -317,7 +319,7 @@ const ServiceOrders = () => {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+          <div className="grid-2">
             <div>
               <label className="label">Aparelho</label>
               <input 
@@ -334,7 +336,7 @@ const ServiceOrders = () => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+          <div className="grid-2">
             <div>
               <label className="label">Forma de Pagamento</label>
               <select className="input-field" value={newOrder.paymentMethod} onChange={(e) => setNewOrder({...newOrder, paymentMethod: e.target.value})}>
@@ -349,7 +351,7 @@ const ServiceOrders = () => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
+          <div className="grid-3">
             <div>
               <label className="label">Mão de Obra (R$)</label>
               <input type="number" step="0.01" className="input-field" value={newOrder.laborPrice} onChange={(e) => setNewOrder({...newOrder, laborPrice: e.target.value})} />
@@ -377,7 +379,7 @@ const ServiceOrders = () => {
             <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '600', color: 'var(--accent-color)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span>🔑 Controle de Peças (Uso Interno - Não é impresso)</span>
             </h4>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+            <div className="grid-3">
               <div>
                 <label className="label" style={{ fontSize: '0.8rem' }}>Data da Compra</label>
                 <input 
@@ -414,7 +416,7 @@ const ServiceOrders = () => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+          <div className="grid-2">
             <div>
               <label className="label">Status OS</label>
               <select className="input-field" value={newOrder.status} onChange={(e) => setNewOrder({...newOrder, status: e.target.value})}>

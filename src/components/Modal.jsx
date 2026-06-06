@@ -14,20 +14,20 @@ const Modal = ({ isOpen, onClose, title, children }) => {
       background: 'rgba(0, 0, 0, 0.7)',
       backdropFilter: 'blur(4px)',
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'center',
       zIndex: 1000,
-      padding: '20px'
+      padding: '40px 20px',
+      overflowY: 'auto'
     }} onClick={onClose}>
       <div 
         className="glass-panel" 
         style={{ 
           width: '100%', 
-          maxWidth: '500px', 
-          maxHeight: '90vh', 
-          overflowY: 'auto', 
+          maxWidth: '650px', 
           padding: '30px', 
-          position: 'relative' 
+          position: 'relative',
+          margin: 'auto 0'
         }} 
         onClick={e => e.stopPropagation()}
       >

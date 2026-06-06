@@ -146,43 +146,45 @@ const Finance = () => {
 
       <div className="glass-panel" style={{ padding: '30px' }}>
         <h2 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '20px' }}>Transações Recentes</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Descrição</th>
-              <th>Data</th>
-              <th>Categoria</th>
-              <th>Valor</th>
-              <th style={{ textAlign: 'center' }}>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.length > 0 ? [...transactions].reverse().map((t) => (
-              <tr key={t.uuid}>
-                <td style={{ fontWeight: '500' }}>{t.desc}</td>
-                <td style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{new Date(t.date).toLocaleDateString('pt-BR')}</td>
-                <td><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{t.category || 'Outros'}</span></td>
-                <td style={{ fontWeight: '600', color: t.type === 'in' ? 'var(--success-color)' : 'var(--danger-color)' }}>
-                  {t.type === 'in' ? '+' : '-'} R$ {t.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </td>
-                <td>
-                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                    <button onClick={() => openEdit(t)} style={{ background: 'none', border: 'none', color: 'var(--accent-color)', cursor: 'pointer' }}>
-                      <Edit2 size={16} />
-                    </button>
-                    <button onClick={() => handleDelete(t.uuid)} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer' }}>
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            )) : (
+        <div className="table-responsive">
+          <table>
+            <thead>
               <tr>
-                <td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)' }}>Nenhuma transação registrada.</td>
+                <th>Descrição</th>
+                <th>Data</th>
+                <th>Categoria</th>
+                <th>Valor</th>
+                <th style={{ textAlign: 'center' }}>Ações</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {transactions.length > 0 ? [...transactions].reverse().map((t) => (
+                <tr key={t.uuid}>
+                  <td style={{ fontWeight: '500' }}>{t.desc}</td>
+                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{new Date(t.date).toLocaleDateString('pt-BR')}</td>
+                  <td><span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{t.category || 'Outros'}</span></td>
+                  <td style={{ fontWeight: '600', color: t.type === 'in' ? 'var(--success-color)' : 'var(--danger-color)' }}>
+                    {t.type === 'in' ? '+' : '-'} R$ {t.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                      <button onClick={() => openEdit(t)} style={{ background: 'none', border: 'none', color: 'var(--accent-color)', cursor: 'pointer' }}>
+                        <Edit2 size={16} />
+                      </button>
+                      <button onClick={() => handleDelete(t.uuid)} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer' }}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)' }}>Nenhuma transação registrada.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <Modal isOpen={isModalOpen} onClose={closeModal} title={editingUuid ? "Editar Transação" : "Nova Transação"}>
@@ -198,7 +200,7 @@ const Finance = () => {
               onChange={(e) => setNewTransaction({...newTransaction, desc: e.target.value})}
             />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+          <div className="grid-2">
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Tipo</label>
               <select 

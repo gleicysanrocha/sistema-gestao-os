@@ -20,7 +20,7 @@ const Field = ({ label, children }) => (
   </div>
 );
 
-const grid2 = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 };
+const grid2 = { display: 'grid', gridTemplateColumns: 'var(--grid-columns, 1fr 1fr)', gap: 'var(--grid-gap, 15px)' };
 
 export function CelularForm({ data, onChange }) {
   const f = (k, v) => onChange({ ...data, [k]: v });

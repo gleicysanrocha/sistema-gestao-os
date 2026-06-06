@@ -400,3 +400,115 @@ tr:hover td {
   color: #128C7E;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
+
+/* ─────────────────────────────────────────────────────────────
+   RESPONSIVE LAYOUT DESIGN & GRID SYSTEM
+   ───────────────────────────────────────────────────────────── */
+
+/* Responsive Grid Utilities (applied to classNames) */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+/* Table container styling to enable horizontal scrolling on small screens */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Responsive breakpoint for tablets and smaller screens */
+@media (max-width: 992px) {
+  .layout {
+    flex-direction: column;
+    padding: 10px;
+    gap: 15px;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    top: 0;
+    padding: 15px 20px;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+  .sidebar > div:first-child {
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+  }
+  .sidebar nav {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex: none !important;
+  }
+  .sidebar .nav-link {
+    margin-bottom: 0;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    gap: 8px;
+  }
+  .sidebar > div:last-child {
+    margin-top: 0 !important;
+    border-top: none !important;
+    padding-top: 0 !important;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .sidebar > div:last-child .nav-link {
+    margin-bottom: 0;
+  }
+  .main-content {
+    height: auto;
+    max-height: none;
+    padding: 0;
+  }
+}
+
+/* Intermediate screen responsive adjustment */
+@media (max-width: 768px) {
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Breakpoint for mobile devices and narrow viewports */
+@media (max-width: 600px) {
+  :root {
+    --grid-columns: 1fr;
+    --grid-gap: 10px;
+  }
+  .grid-2, .grid-3 {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .sidebar {
+    flex-direction: column !important;
+    align-items: stretch;
+  }
+  .sidebar nav {
+    justify-content: center;
+    width: 100%;
+  }
+  .sidebar > div:last-child {
+    width: 100%;
+    justify-content: center;
+    border-top: 1px solid var(--panel-border) !important;
+    padding-top: 10px !important;
+  }
+}
+
