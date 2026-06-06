@@ -31,6 +31,7 @@ const PrintBudget = ({ budget, settings }) => {
   const categoryLabel = {
     celular: '📱 Manutenção de Celular',
     notebook: '💻 Manutenção de Notebook',
+    computador: '🖥️ Montagem de Computador',
     sistema: '🖥️ Projeto de Sistema',
     site: '🌐 Criação de Site',
     automacao: '🤖 Automação',

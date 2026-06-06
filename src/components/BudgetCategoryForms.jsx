@@ -1,13 +1,15 @@
 import React from 'react';
-import { Smartphone, Laptop, Code, Globe, Bot } from 'lucide-react';
+import { Smartphone, Laptop, Code, Globe, Bot, Cpu } from 'lucide-react';
 
 export const CATEGORIES = [
   { id: 'celular', label: 'Manutenção de Celular', icon: Smartphone, color: '#6366f1' },
   { id: 'notebook', label: 'Manutenção de Notebook', icon: Laptop, color: '#3b82f6' },
+  { id: 'computador', label: 'Montagem de Computador', icon: Cpu, color: '#06b6d4' },
   { id: 'sistema', label: 'Projeto de Sistema', icon: Code, color: '#8b5cf6' },
   { id: 'site', label: 'Criação de Site', icon: Globe, color: '#10b981' },
   { id: 'automacao', label: 'Automação', icon: Bot, color: '#f59e0b' },
 ];
+
 
 const Field = ({ label, children }) => (
   <div>
@@ -349,3 +351,66 @@ export function AutomacaoForm({ data, onChange }) {
     </div>
   );
 }
+
+export function ComputadorForm({ data, onChange }) {
+  const f = (k, v) => onChange({ ...data, [k]: v });
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+      <div style={grid2}>
+        <Field label="Processador (CPU)">
+          <input className="input-field" placeholder="Ex: Intel i7-13700K / Ryzen 7 7800X3D" value={data.cpu || ''} onChange={e => f('cpu', e.target.value)} />
+        </Field>
+        <Field label="Placa-Mãe">
+          <input className="input-field" placeholder="Ex: ASUS ROG Strix B650-A" value={data.placaMae || ''} onChange={e => f('placaMae', e.target.value)} />
+        </Field>
+      </div>
+      <div style={grid2}>
+        <Field label="Memória RAM">
+          <input className="input-field" placeholder="Ex: 32GB DDR5 6000MHz (2x16GB)" value={data.ram || ''} onChange={e => f('ram', e.target.value)} />
+        </Field>
+        <Field label="Placa de Vídeo (GPU)">
+          <input className="input-field" placeholder="Ex: RTX 4070 Ti Super 16GB" value={data.gpu || ''} onChange={e => f('gpu', e.target.value)} />
+        </Field>
+      </div>
+      <div style={grid2}>
+        <Field label="Armazenamento (SSD/HD)">
+          <input className="input-field" placeholder="Ex: SSD 2TB NVMe M.2 Kingston" value={data.armazenamento || ''} onChange={e => f('armazenamento', e.target.value)} />
+        </Field>
+        <Field label="Fonte de Alimentação">
+          <input className="input-field" placeholder="Ex: Corsair RM850x 850W 80 Plus Gold" value={data.fonte || ''} onChange={e => f('fonte', e.target.value)} />
+        </Field>
+      </div>
+      <div style={grid2}>
+        <Field label="Gabinete">
+          <input className="input-field" placeholder="Ex: Lian Li O11 Dynamic" value={data.gabinete || ''} onChange={e => f('gabinete', e.target.value)} />
+        </Field>
+        <Field label="Cooler / Refrigeração">
+          <input className="input-field" placeholder="Ex: Water Cooler Corsair H150i 360mm" value={data.cooler || ''} onChange={e => f('cooler', e.target.value)} />
+        </Field>
+      </div>
+      <div style={grid2}>
+        <Field label="Prazo Estimado">
+          <select className="input-field" value={data.prazo || ''} onChange={e => f('prazo', e.target.value)}>
+            <option value="">Selecione...</option>
+            <option>No mesmo dia</option>
+            <option>24 horas</option>
+            <option>2-3 dias úteis</option>
+            <option>5-7 dias úteis</option>
+          </select>
+        </Field>
+        <div style={grid2}>
+          <Field label="Valor das Peças (R$)">
+            <input className="input-field" type="number" placeholder="0,00" value={data.valorPeca || ''} onChange={e => f('valorPeca', e.target.value)} />
+          </Field>
+          <Field label="Mão de Obra (R$)">
+            <input className="input-field" type="number" placeholder="0,00" value={data.valorMaoObra || ''} onChange={e => f('valorMaoObra', e.target.value)} />
+          </Field>
+        </div>
+      </div>
+      <Field label="Observações Adicionais / Outros Componentes">
+        <textarea className="input-field" style={{ minHeight: 70 }} placeholder="Ex: Sistema operacional a instalar, ventoinhas extras, cabos customizados, etc." value={data.obs || ''} onChange={e => f('obs', e.target.value)} />
+      </Field>
+    </div>
+  );
+}
+

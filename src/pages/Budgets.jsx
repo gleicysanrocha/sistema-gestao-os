@@ -6,15 +6,17 @@ import {
   CATEGORIES,
   CelularForm,
   NotebookForm,
+  ComputadorForm,
   SistemaForm,
   SiteForm,
   AutomacaoForm
 } from '../components/BudgetCategoryForms';
 import PrintBudget from '../components/PrintBudget';
 
+
 // ─── helpers ────────────────────────────────────────────────
 const calcTotal = (cat, d) => {
-  if (cat === 'celular' || cat === 'notebook') {
+  if (cat === 'celular' || cat === 'notebook' || cat === 'computador') {
     return (parseFloat(d.valorPeca) || 0) + (parseFloat(d.valorMaoObra) || 0);
   }
   return parseFloat(d.valorEstimado) || 0;
@@ -25,6 +27,8 @@ const buildDescription = (cat, d) => {
     return `Serviço: ${d.servico || '-'}\nModelo: ${d.modelo || '-'}\nIMEI: ${d.imei || '-'}\nCondição da peça: ${d.pecaCondicao || '-'}\nPrazo: ${d.prazo || '-'}\nObs: ${d.obs || '-'}`;
   if (cat === 'notebook')
     return `Serviço: ${d.servico || '-'}\nModelo: ${d.modelo || '-'}\nS.O.: ${d.so || '-'}\nConfiguração: ${d.config || '-'}\nPrazo: ${d.prazo || '-'}\nObs: ${d.obs || '-'}`;
+  if (cat === 'computador')
+    return `Serviço: Montagem de Computador\nCPU: ${d.cpu || '-'}\nPlaca-Mãe: ${d.placaMae || '-'}\nRAM: ${d.ram || '-'}\nGPU: ${d.gpu || '-'}\nArmazenamento: ${d.armazenamento || '-'}\nFonte: ${d.fonte || '-'}\nGabinete: ${d.gabinete || '-'}\nCooler: ${d.cooler || '-'}\nPrazo: ${d.prazo || '-'}\nObs: ${d.obs || '-'}`;
   if (cat === 'sistema')
     return `Projeto: ${d.nomeProjeto || '-'}\nTipo: ${d.tipo || '-'}\nFuncionalidades: ${d.funcionalidades || '-'}\nTecnologia: ${d.tecnologia || '-'}\nIntegrações: ${d.integracoes || '-'}\nContrato: ${d.contrato || '-'}\nObs: ${d.obs || '-'}`;
   if (cat === 'site')
@@ -37,6 +41,7 @@ const buildDescription = (cat, d) => {
 const getDeviceLabel = (cat, d) => {
   if (cat === 'celular') return d.modelo || 'Celular';
   if (cat === 'notebook') return d.modelo || 'Notebook';
+  if (cat === 'computador') return `PC: ${d.cpu || 'Computador'}`;
   if (cat === 'sistema') return d.nomeProjeto || 'Sistema';
   if (cat === 'site') return d.nomeSite || 'Site';
   if (cat === 'automacao') return d.nomeAutomacao || 'Automação';
@@ -160,6 +165,7 @@ const Budgets = () => {
     const props = { data: catData, onChange: setCatData };
     if (selectedCat === 'celular') return <CelularForm {...props} />;
     if (selectedCat === 'notebook') return <NotebookForm {...props} />;
+    if (selectedCat === 'computador') return <ComputadorForm {...props} />;
     if (selectedCat === 'sistema') return <SistemaForm {...props} />;
     if (selectedCat === 'site') return <SiteForm {...props} />;
     if (selectedCat === 'automacao') return <AutomacaoForm {...props} />;

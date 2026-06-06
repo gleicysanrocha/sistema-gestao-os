@@ -36,7 +36,7 @@ const ServiceOrders = () => {
     partPurchaseValue: ''
   });
 
-  const categories = ['Celular', 'Computador', 'Site / Aplicação', 'Manutenção', 'Consultoria', 'Outros'];
+  const categories = ['Celular', 'Computador', 'Montagem de Computador', 'Site / Aplicação', 'Manutenção', 'Consultoria', 'Outros'];
   const paymentMethods = ['Pix', 'Cartão de Crédito', 'Cartão de Débito', 'Dinheiro', 'Transferência', 'Outro'];
   const paymentStatuses = ['Pendente', 'Pago', 'Parcial', 'Cancelado'];
 
