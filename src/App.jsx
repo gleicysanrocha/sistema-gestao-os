@@ -9,10 +9,11 @@ import Settings from './pages/Settings';
 import Budgets from './pages/Budgets';
 import Login from './pages/Login';
 import { storage } from './utils/storage';
-import { supabase } from './utils/supabaseClient';
+import { auth } from './utils/firebaseClient';
+import { onAuthStateChanged } from 'firebase/auth';
 
 function App() {
-  const [session, setSession] = useState(null);
+  const [user, setUser] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [initializing, setInitializing] = useState(true);
 
@@ -21,48 +22,31 @@ function App() {
     const settings = storage.getSettings();
     document.documentElement.setAttribute('data-theme', settings.theme || 'dark');
 
-    if (!supabase) {
+    if (!auth) {
       setInitializing(false);
       return;
     }
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        triggerSync();
-      } else {
-        setInitializing(false);
-      }
-    });
-
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
-      setSession(currentSession);
-      if (currentSession) {
-        triggerSync();
-      } else {
-        setInitializing(false);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        setSyncing(true);
+        await storage.syncWithCloud();
+        
+        // Apply settings/theme after sync
+        const settingsAfterSync = storage.getSettings();
+        document.documentElement.setAttribute('data-theme', settingsAfterSync.theme || 'dark');
+        
+        setSyncing(false);
       }
+      setInitializing(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
-  const triggerSync = async () => {
-    setSyncing(true);
-    await storage.syncWithCloud();
-    
-    // Apply settings/theme after sync
-    const settings = storage.getSettings();
-    document.documentElement.setAttribute('data-theme', settings.theme || 'dark');
-    
-    setSyncing(false);
-    setInitializing(false);
-  };
-
-  // If Supabase is configured, check if we need to show the login screen
-  const isCloudConfigured = supabase !== null;
+  const isCloudConfigured = auth !== null;
 
   if (isCloudConfigured && initializing) {
     return (
@@ -102,7 +86,7 @@ function App() {
     );
   }
 
-  if (isCloudConfigured && !session) {
+  if (isCloudConfigured && !user) {
     return <Login />;
   }
 

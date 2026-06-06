@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, ClipboardList, Wallet, Users, Settings as SettingsIcon, LogOut, FileText } from 'lucide-react';
 import { storage } from '../utils/storage';
-import { supabase } from '../utils/supabaseClient';
+import { auth } from '../utils/firebaseClient';
+import { signOut } from 'firebase/auth';
 
 const Sidebar = () => {
   const [systemName, setSystemName] = useState('Gestão Gleicy Rocha');
@@ -19,9 +20,9 @@ const Sidebar = () => {
   const restPart = nameParts.slice(1).join(' ');
 
   const handleLogout = async () => {
-    if (supabase) {
+    if (auth) {
       if (window.confirm('Deseja realmente sair da sua conta? Os dados locais serão limpos para sua segurança.')) {
-        await supabase.auth.signOut();
+        await signOut(auth);
         localStorage.clear();
         window.location.reload();
       }
@@ -69,7 +70,7 @@ const Sidebar = () => {
           <SettingsIcon size={20} />
           <span>Configurações</span>
         </NavLink>
-        {supabase && (
+        {auth && (
           <button onClick={handleLogout} className="nav-link" style={{ background: 'none', border: 'none', width: '100%', cursor: 'pointer', textAlign: 'left' }}>
             <LogOut size={20} />
             <span>Sair</span>

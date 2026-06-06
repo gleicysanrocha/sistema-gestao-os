@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { supabase } from './supabaseClient';
+import { auth, db } from './firebaseClient';
+import { doc, setDoc, deleteDoc, getDocs, collection, writeBatch } from 'firebase/firestore';
 
 const STORAGE_KEYS = {
   ORDERS: 'os_manager_orders',
@@ -18,45 +19,35 @@ const saveToStorage = (key, data) => {
   localStorage.setItem(key, JSON.stringify(data));
 };
 
-// Synchronous helper to get active Supabase user ID from local storage
+// Synchronous helper to get active Firebase user ID
 const getUserId = () => {
-  if (!supabase) return null;
-  const projectRef = import.meta.env.VITE_SUPABASE_URL.replace('https://', '').split('.')[0];
-  const sessionStr = localStorage.getItem(`sb-${projectRef}-auth-token`);
-  if (sessionStr) {
-    try {
-      const session = JSON.parse(sessionStr);
-      return session?.user?.id || null;
-    } catch (e) {
-      return null;
-    }
-  }
-  return null;
+  if (!auth) return null;
+  return auth.currentUser?.uid || null;
 };
 
-// Background Cloud Sync
+// Background Cloud Sync for individual documents in Firestore
 const syncRecord = async (table, data, isDelete = false) => {
   const userId = getUserId();
-  if (!userId || !supabase) return;
+  if (!userId || !db) return;
 
   try {
-    if (isDelete) {
-      await supabase.from(table).delete().eq('uuid', data.uuid).eq('user_id', userId);
-    } else {
-      if (table === 'settings') {
-        await supabase.from('settings').upsert({
-          user_id: userId,
-          ...data
-        });
+    if (table === 'settings') {
+      const docRef = doc(db, 'users', userId, 'config', 'settings');
+      if (isDelete) {
+        await deleteDoc(docRef);
       } else {
-        await supabase.from(table).upsert({
-          user_id: userId,
-          ...data
-        });
+        await setDoc(docRef, data);
+      }
+    } else {
+      const docRef = doc(db, 'users', userId, table, data.uuid);
+      if (isDelete) {
+        await deleteDoc(docRef);
+      } else {
+        await setDoc(docRef, data);
       }
     }
   } catch (err) {
-    console.error(`Erro ao sincronizar tabela ${table} com Supabase:`, err);
+    console.error(`Erro ao sincronizar tabela ${table} com Firebase:`, err);
   }
 };
 
@@ -343,12 +334,15 @@ export const storage = {
 
       // Sync imported records to cloud
       const userId = getUserId();
-      if (userId && supabase) {
-        if (data.clients) data.clients.forEach(c => syncRecord('clients', c));
-        if (data.orders) data.orders.forEach(o => syncRecord('orders', o));
-        if (data.transactions) data.transactions.forEach(t => syncRecord('transactions', t));
-        if (data.settings) syncRecord('settings', data.settings);
-        if (data.budgets) data.budgets.forEach(b => syncRecord('budgets', b));
+      if (userId && db) {
+        const batch = writeBatch(db);
+        if (data.clients) data.clients.forEach(c => batch.set(doc(db, 'users', userId, 'clients', c.uuid), c));
+        if (data.orders) data.orders.forEach(o => batch.set(doc(db, 'users', userId, 'orders', o.uuid), o));
+        if (data.transactions) data.transactions.forEach(t => batch.set(doc(db, 'users', userId, 'transactions', t.uuid), t));
+        if (data.settings) batch.set(doc(db, 'users', userId, 'config', 'settings'), data.settings);
+        if (data.budgets) data.budgets.forEach(b => batch.set(doc(db, 'users', userId, 'budgets', b.uuid), b));
+        
+        batch.commit();
       }
 
       return { success: true };
@@ -357,34 +351,45 @@ export const storage = {
     }
   },
 
-  // Sincronização geral com o banco de dados Supabase
+  // Sincronização geral com o banco de dados Cloud Firestore do Firebase
   syncWithCloud: async () => {
-    if (!supabase) return { success: false, error: 'Supabase não configurado' };
+    if (!db || !auth) return { success: false, error: 'Firebase não configurado' };
     
-    // Get session user
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
+    const user = auth.currentUser;
     if (!user) return { success: false, error: 'Usuário não autenticado' };
 
-    const userId = user.id;
+    const userId = user.uid;
 
     try {
-      // 1. Fetch cloud data
+      // 1. Fetch cloud data for all subcollections
       const [
-        { data: cloudOrders },
-        { data: cloudClients },
-        { data: cloudTransactions },
-        { data: cloudBudgets },
-        settingsResponse
+        ordersSnap,
+        clientsSnap,
+        transactionsSnap,
+        budgetsSnap,
       ] = await Promise.all([
-        supabase.from('orders').select('*').eq('user_id', userId),
-        supabase.from('clients').select('*').eq('user_id', userId),
-        supabase.from('transactions').select('*').eq('user_id', userId),
-        supabase.from('budgets').select('*').eq('user_id', userId),
-        supabase.from('settings').select('*').eq('user_id', userId)
+        getDocs(collection(db, 'users', userId, 'orders')),
+        getDocs(collection(db, 'users', userId, 'clients')),
+        getDocs(collection(db, 'users', userId, 'transactions')),
+        getDocs(collection(db, 'users', userId, 'budgets'))
       ]);
 
-      const cloudSettings = settingsResponse.data?.[0];
+      // For settings, it's a single document
+      let cloudSettings = null;
+      try {
+        const settingsDoc = await getDocs(collection(db, 'users', userId, 'config'));
+        const settingsFile = settingsDoc.docs.find(d => d.id === 'settings');
+        if (settingsFile) {
+          cloudSettings = settingsFile.data();
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar settings do Firestore:', err);
+      }
+
+      const cloudOrders = ordersSnap.docs.map(doc => doc.data());
+      const cloudClients = clientsSnap.docs.map(doc => doc.data());
+      const cloudTransactions = transactionsSnap.docs.map(doc => doc.data());
+      const cloudBudgets = budgetsSnap.docs.map(doc => doc.data());
 
       const localOrders = storage.getOrders();
       const localClients = storage.getClients();
@@ -392,69 +397,63 @@ export const storage = {
       const localBudgets = storage.getBudgets();
       const localSettings = storage.getSettings();
 
-      // Check if this is the first login (cloud is empty, local has data)
-      const isCloudEmpty = (!cloudOrders || cloudOrders.length === 0) &&
-                           (!cloudClients || cloudClients.length === 0) &&
-                           (!cloudTransactions || cloudTransactions.length === 0) &&
-                           (!cloudBudgets || cloudBudgets.length === 0);
+      // Check if cloud is empty
+      const isCloudEmpty = cloudOrders.length === 0 &&
+                           cloudClients.length === 0 &&
+                           cloudTransactions.length === 0 &&
+                           cloudBudgets.length === 0;
 
       const hasLocalData = localOrders.length > 0 || localClients.length > 0;
 
       if (isCloudEmpty && hasLocalData) {
-        // MIGRATION: Upload local data to Supabase
-        console.log('Migrando dados locais para a nuvem...');
+        // MIGRATION: Upload local data to Firestore
+        console.log('Migrando dados locais para o Firestore...');
         
-        const uploadPromises = [];
-        
-        if (localClients.length > 0) {
-          uploadPromises.push(supabase.from('clients').insert(
-            localClients.map(c => ({ user_id: userId, ...c }))
-          ));
-        }
-        if (localOrders.length > 0) {
-          uploadPromises.push(supabase.from('orders').insert(
-            localOrders.map(o => ({ user_id: userId, ...o }))
-          ));
-        }
-        if (localTransactions.length > 0) {
-          uploadPromises.push(supabase.from('transactions').insert(
-            localTransactions.map(t => ({ user_id: userId, ...t }))
-          ));
-        }
-        if (localBudgets.length > 0) {
-          uploadPromises.push(supabase.from('budgets').insert(
-            localBudgets.map(b => ({ user_id: userId, ...b }))
-          ));
-        }
-        
-        uploadPromises.push(supabase.from('settings').upsert({
-          user_id: userId,
-          ...localSettings
-        }));
+        const batch = writeBatch(db);
 
-        await Promise.all(uploadPromises);
+        localClients.forEach(c => {
+          batch.set(doc(db, 'users', userId, 'clients', c.uuid), c);
+        });
+
+        localOrders.forEach(o => {
+          batch.set(doc(db, 'users', userId, 'orders', o.uuid), o);
+        });
+
+        localTransactions.forEach(t => {
+          batch.set(doc(db, 'users', userId, 'transactions', t.uuid), t);
+        });
+
+        localBudgets.forEach(b => {
+          batch.set(doc(db, 'users', userId, 'budgets', b.uuid), b);
+        });
+
+        batch.set(doc(db, 'users', userId, 'config', 'settings'), localSettings);
+
+        await batch.commit();
         return { success: true, migrated: true };
       } else {
         // CLOUD SYNC: Overwrite local storage with cloud data
-        console.log('Sincronizando dados da nuvem para o local...');
+        console.log('Sincronizando dados do Firestore para o local...');
         
-        if (cloudOrders) saveToStorage(STORAGE_KEYS.ORDERS, cloudOrders);
-        if (cloudClients) saveToStorage(STORAGE_KEYS.CLIENTS, cloudClients);
-        if (cloudTransactions) saveToStorage(STORAGE_KEYS.TRANSACTIONS, cloudTransactions);
-        if (cloudBudgets) saveToStorage(STORAGE_KEYS.BUDGETS, cloudBudgets);
-        if (cloudSettings) saveToStorage(STORAGE_KEYS.SETTINGS, {
-          businessName: cloudSettings.businessName || 'Gleicy Rocha',
-          pixKey: cloudSettings.pixKey || '',
-          pixType: cloudSettings.pixType || 'Celular',
-          businessDescription: cloudSettings.businessDescription || '',
-          systemName: cloudSettings.systemName || 'Gestão Gleicy Rocha',
-          theme: cloudSettings.theme || 'dark'
-        });
+        if (cloudOrders.length > 0) saveToStorage(STORAGE_KEYS.ORDERS, cloudOrders);
+        if (cloudClients.length > 0) saveToStorage(STORAGE_KEYS.CLIENTS, cloudClients);
+        if (cloudTransactions.length > 0) saveToStorage(STORAGE_KEYS.TRANSACTIONS, cloudTransactions);
+        if (cloudBudgets.length > 0) saveToStorage(STORAGE_KEYS.BUDGETS, cloudBudgets);
+        if (cloudSettings) {
+          saveToStorage(STORAGE_KEYS.SETTINGS, {
+            businessName: cloudSettings.businessName || 'Gleicy Rocha',
+            pixKey: cloudSettings.pixKey || '',
+            pixType: cloudSettings.pixType || 'Celular',
+            businessDescription: cloudSettings.businessDescription || '',
+            systemName: cloudSettings.systemName || 'Gestão Gleicy Rocha',
+            theme: cloudSettings.theme || 'dark'
+          });
+        }
 
         return { success: true, synced: true };
       }
     } catch (err) {
-      console.error('Erro na sincronização com Supabase:', err);
+      console.error('Erro na sincronização com Firestore:', err);
       return { success: false, error: err.message };
     }
   },

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { supabase } from '../utils/supabaseClient';
+import { auth } from '../utils/firebaseClient';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Lock, Mail, Database, Terminal, ShieldAlert } from 'lucide-react';
 
 const Login = () => {
@@ -10,8 +11,8 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!supabase) {
-      setErrorMsg('Supabase não configurado no arquivo .env');
+    if (!auth) {
+      setErrorMsg('Firebase não configurado no arquivo .env');
       return;
     }
 
@@ -19,22 +20,22 @@ const Login = () => {
     setErrorMsg('');
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        setErrorMsg(error.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos.' : error.message);
-      }
+      await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
-      setErrorMsg('Erro inesperado de rede. Verifique sua conexão.');
+      console.error(err);
+      let msg = 'Erro de rede ou conexão. Verifique os dados.';
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        msg = 'E-mail ou senha incorretos.';
+      } else if (err.code === 'auth/invalid-email') {
+        msg = 'Formato de e-mail inválido.';
+      }
+      setErrorMsg(msg);
     } finally {
       setLoading(false);
     }
   };
 
-  const isConfigured = supabase !== null;
+  const isConfigured = auth !== null;
 
   return (
     <div style={{
@@ -78,7 +79,7 @@ const Login = () => {
             Gestão <span style={{ color: 'var(--text-primary)' }}>OS</span>
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '6px' }}>
-            Acesse seus dados em segurança de qualquer lugar
+            Acesse seus dados em segurança de qualquer lugar (Firebase)
           </p>
         </div>
 
@@ -97,10 +98,10 @@ const Login = () => {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', marginBottom: '8px' }}>
                 <ShieldAlert size={18} />
-                <span>Banco de dados pendente</span>
+                <span>Firebase pendente</span>
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
-                Ainda não detectamos a conexão com o Supabase. Para que o site funcione na nuvem, você deve configurar as variáveis de ambiente:
+                Ainda não detectamos a conexão com o Firebase. Para que o site funcione na nuvem, você deve configurar as variáveis de ambiente no arquivo `.env` ou no painel da Vercel:
               </p>
               <div style={{ 
                 background: 'rgba(0,0,0,0.3)', 
@@ -110,15 +111,18 @@ const Login = () => {
                 borderRadius: '8px', 
                 marginTop: '10px',
                 color: '#f3f4f6',
-                border: '1px solid rgba(255,255,255,0.05)'
+                border: '1px solid rgba(255,255,255,0.05)',
+                whiteSpace: 'nowrap',
+                overflowX: 'auto'
               }}>
-                <div>VITE_SUPABASE_URL</div>
-                <div>VITE_SUPABASE_ANON_KEY</div>
+                <div>VITE_FIREBASE_API_KEY</div>
+                <div>VITE_FIREBASE_AUTH_DOMAIN</div>
+                <div>VITE_FIREBASE_PROJECT_ID</div>
               </div>
             </div>
 
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', textAlign: 'center', lineHeight: '1.5' }}>
-              Para rodar o sistema apenas em modo offline enquanto não configura, remova os placeholders do seu arquivo `.env` para ver a interface clássica.
+              Para rodar o sistema offline enquanto não configura o Firebase, remova os placeholders do seu arquivo `.env` para pular a autenticação.
             </p>
           </div>
         ) : (
