@@ -56,12 +56,14 @@ export const storage = {
   getOrders: () => getFromStorage(STORAGE_KEYS.ORDERS),
   addOrder: (order) => {
     const orders = storage.getOrders();
+    const nextId = orders.length > 0 ? Math.max(...orders.map(o => parseInt(o.id) || 0)) + 1 : 1001;
+    const finalId = Math.max(nextId, 1001).toString();
     const newOrder = { 
       ...order, 
-      id: order.id || Math.floor(1000 + Math.random() * 9000).toString(),
+      id: order.id ? order.id.toString() : finalId,
       uuid: uuidv4(),
       date: order.date || new Date().toISOString(),
-      createdAt: new Date().toISOString()
+      createdAt: order.createdAt || new Date().toISOString()
     };
     orders.push(newOrder);
     saveToStorage(STORAGE_KEYS.ORDERS, orders);
@@ -277,12 +279,14 @@ export const storage = {
   getBudgets: () => getFromStorage(STORAGE_KEYS.BUDGETS),
   addBudget: (budget) => {
     const budgets = storage.getBudgets();
-    const id = budgets.length > 0 ? Math.max(...budgets.map(b => b.id)) + 1 : 2001;
+    const nextId = budgets.length > 0 ? Math.max(...budgets.map(b => parseInt(b.id) || 0)) + 1 : 2001;
+    const finalId = Math.max(nextId, 2001).toString();
     const newBudget = { 
       ...budget, 
-      id, 
+      id: budget.id ? budget.id.toString() : finalId, 
       uuid: uuidv4(),
-      date: new Date().toISOString()
+      date: budget.date || new Date().toISOString(),
+      createdAt: budget.createdAt || new Date().toISOString()
     };
     saveToStorage(STORAGE_KEYS.BUDGETS, [...budgets, newBudget]);
 
@@ -410,24 +414,33 @@ export const storage = {
         console.log('Migrando dados locais para o Firestore...');
         
         const batch = writeBatch(db);
+        
+        // Executar migração de IDs localmente primeiro
+        await storage.runLocalMigration(batch);
+        
+        // Carregar os dados atualizados pós-migração
+        const updatedOrders = storage.getOrders();
+        const updatedBudgets = storage.getBudgets();
+        const updatedTransactions = storage.getTransactions();
+        const updatedSettings = storage.getSettings();
 
         localClients.forEach(c => {
           batch.set(doc(db, 'users', userId, 'clients', c.uuid), c);
         });
 
-        localOrders.forEach(o => {
+        updatedOrders.forEach(o => {
           batch.set(doc(db, 'users', userId, 'orders', o.uuid), o);
         });
 
-        localTransactions.forEach(t => {
+        updatedTransactions.forEach(t => {
           batch.set(doc(db, 'users', userId, 'transactions', t.uuid), t);
         });
 
-        localBudgets.forEach(b => {
+        updatedBudgets.forEach(b => {
           batch.set(doc(db, 'users', userId, 'budgets', b.uuid), b);
         });
 
-        batch.set(doc(db, 'users', userId, 'config', 'settings'), localSettings);
+        batch.set(doc(db, 'users', userId, 'config', 'settings'), updatedSettings);
 
         await batch.commit();
         return { success: true, migrated: true };
@@ -439,15 +452,22 @@ export const storage = {
         if (cloudClients.length > 0) saveToStorage(STORAGE_KEYS.CLIENTS, cloudClients);
         if (cloudTransactions.length > 0) saveToStorage(STORAGE_KEYS.TRANSACTIONS, cloudTransactions);
         if (cloudBudgets.length > 0) saveToStorage(STORAGE_KEYS.BUDGETS, cloudBudgets);
-        if (cloudSettings) {
-          saveToStorage(STORAGE_KEYS.SETTINGS, {
-            businessName: cloudSettings.businessName || 'Gleicy Rocha',
-            pixKey: cloudSettings.pixKey || '',
-            pixType: cloudSettings.pixType || 'Celular',
-            businessDescription: cloudSettings.businessDescription || '',
-            systemName: cloudSettings.systemName || 'Gestão Gleicy Rocha',
-            theme: cloudSettings.theme || 'dark'
-          });
+        
+        const settingsToSave = {
+          businessName: cloudSettings?.businessName || 'Gleicy Rocha',
+          pixKey: cloudSettings?.pixKey || '',
+          pixType: cloudSettings?.pixType || 'Celular',
+          businessDescription: cloudSettings?.businessDescription || '',
+          systemName: cloudSettings?.systemName || 'Gestão Gleicy Rocha',
+          theme: cloudSettings?.theme || 'dark',
+          idMigrationDone: cloudSettings?.idMigrationDone || false
+        };
+        saveToStorage(STORAGE_KEYS.SETTINGS, settingsToSave);
+
+        // Se a migração de IDs não estiver marcada na nuvem, executar localmente e salvar na nuvem
+        if (!settingsToSave.idMigrationDone) {
+          console.log('A nuvem não possui migração de IDs concluída. Executando migração...');
+          await storage.runLocalMigration();
         }
 
         return { success: true, synced: true };
@@ -455,6 +475,109 @@ export const storage = {
     } catch (err) {
       console.error('Erro na sincronização com Firestore:', err);
       return { success: false, error: err.message };
+    }
+  },
+
+  // Método de migração única de IDs sequenciais e ordenação cronológica
+  runLocalMigration: async (batchToCommit = null) => {
+    const settings = storage.getSettings();
+    if (settings.idMigrationDone) {
+      return;
+    }
+
+    console.log('Iniciando migração de IDs sequenciais e ordenação cronológica...');
+
+    // 1. Ordens de Serviço (OS)
+    const orders = storage.getOrders();
+    // Ordenar cronologicamente
+    orders.sort((a, b) => {
+      const dateA = a.createdAt || a.date || '';
+      const dateB = b.createdAt || b.date || '';
+      return dateA.localeCompare(dateB);
+    });
+
+    const orderIdMap = {};
+    const migratedOrders = orders.map((order, index) => {
+      const oldId = order.id?.toString();
+      const newId = (1001 + index).toString();
+      if (oldId) {
+        orderIdMap[oldId] = newId;
+      }
+      return {
+        ...order,
+        id: newId
+      };
+    });
+
+    // 2. Orçamentos (Budgets)
+    const budgets = storage.getBudgets();
+    budgets.sort((a, b) => {
+      const dateA = a.createdAt || a.date || '';
+      const dateB = b.createdAt || b.date || '';
+      return dateA.localeCompare(dateB);
+    });
+    
+    const migratedBudgets = budgets.map((budget, index) => {
+      const newId = (2001 + index).toString();
+      return {
+        ...budget,
+        id: newId
+      };
+    });
+
+    // 3. Transações Financeiras (Transactions)
+    const transactions = storage.getTransactions();
+    const migratedTransactions = transactions.map(t => {
+      let desc = t.desc || '';
+      const match = desc.match(/OS\s*#(\d+)/i);
+      if (match) {
+        const oldId = match[1];
+        if (orderIdMap[oldId]) {
+          desc = desc.replace(new RegExp(`OS\\s*#${oldId}`, 'i'), `OS #${orderIdMap[oldId]}`);
+        }
+      }
+      return {
+        ...t,
+        desc
+      };
+    });
+
+    // Salvar localmente
+    saveToStorage(STORAGE_KEYS.ORDERS, migratedOrders);
+    saveToStorage(STORAGE_KEYS.BUDGETS, migratedBudgets);
+    saveToStorage(STORAGE_KEYS.TRANSACTIONS, migratedTransactions);
+
+    // Marcar migração como concluída
+    settings.idMigrationDone = true;
+    saveToStorage(STORAGE_KEYS.SETTINGS, settings);
+
+    console.log('Migração de IDs concluída localmente.');
+
+    // Sincronizar com Firestore se o usuário está logado
+    const userId = getUserId();
+    if (userId && db) {
+      try {
+        const batch = batchToCommit || writeBatch(db);
+        
+        // Reescrever registros migrados no Firestore
+        migratedOrders.forEach(o => {
+          batch.set(doc(db, 'users', userId, 'orders', o.uuid), o);
+        });
+        migratedBudgets.forEach(b => {
+          batch.set(doc(db, 'users', userId, 'budgets', b.uuid), b);
+        });
+        migratedTransactions.forEach(t => {
+          batch.set(doc(db, 'users', userId, 'transactions', t.uuid), t);
+        });
+        batch.set(doc(db, 'users', userId, 'config', 'settings'), settings);
+
+        if (!batchToCommit) {
+          await batch.commit();
+          console.log('Sincronização da migração enviada ao Firestore com sucesso.');
+        }
+      } catch (err) {
+        console.error('Erro ao salvar migração de IDs no Firestore:', err);
+      }
     }
   },
 
@@ -546,5 +669,8 @@ export const storage = {
         saveToStorage(STORAGE_KEYS.TRANSACTIONS, transactions);
       }
     }
+
+    // Executar migração única se ainda não foi feita
+    storage.runLocalMigration();
   }
 };
