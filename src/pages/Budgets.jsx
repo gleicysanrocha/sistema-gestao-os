@@ -240,7 +240,7 @@ const Budgets = () => {
               {filtered.length === 0 && (
                 <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-secondary)' }}>Nenhum orçamento encontrado.</td></tr>
               )}
-              {filtered.map(b => {
+              {[...filtered].sort((a, b) => (parseInt(a.id) || 0) - (parseInt(b.id) || 0)).map(b => {
                 const cat = catInfo(b.category);
                 const Icon = cat?.icon;
                 return (

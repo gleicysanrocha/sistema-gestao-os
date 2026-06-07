@@ -224,7 +224,7 @@ const ServiceOrders = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.map((order) => (
+              {[...filteredOrders].sort((a, b) => (parseInt(a.id) || 0) - (parseInt(b.id) || 0)).map((order) => (
                 <tr key={order.uuid}>
                   <td style={{ fontWeight: '500' }}>#{order.id}</td>
                   <td>{order.clientName}</td>
