@@ -22,8 +22,8 @@ const PrintOS = ({ order, settings, getClientData }) => {
 
   const fmt = (v) => (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 
-  const isPaid = order.paymentStatus === 'Pago';
   
+  // Theme Color System
   // Theme Color System
   const brandPrimary = '#0f172a'; // Slate 900
   const brandAccent = '#4f46e5';  // Indigo 600
@@ -95,15 +95,6 @@ const PrintOS = ({ order, settings, getClientData }) => {
           </p>
           <div style={{ fontSize: '11px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <span><strong>Data:</strong> {dateLabel}</span>
-            <span>
-              <strong>Status:</strong>{' '}
-              <span style={{ 
-                color: order.status === 'Concluído' ? '#059669' : order.status === 'Em Andamento' ? '#2563eb' : '#d97706', 
-                fontWeight: 700 
-              }}>
-                {order.status}
-              </span>
-            </span>
           </div>
         </div>
       </div>
@@ -224,15 +215,8 @@ const PrintOS = ({ order, settings, getClientData }) => {
         </table>
       </div>
 
-      {/* ── PAYMENT & RECEIPT STATUS ── */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: '1.2fr 0.8fr', 
-        gap: '20px', 
-        alignItems: 'start', 
-        marginBottom: '25px' 
-      }}>
-        {/* Payment Details */}
+      {/* ── PAYMENT DETAILS ── */}
+      <div style={{ marginBottom: '25px' }}>
         <div style={{ 
           border: '1px solid #c4b5fd', 
           background: '#f5f3ff', 
@@ -260,47 +244,6 @@ const PrintOS = ({ order, settings, getClientData }) => {
             Tipo: <strong>{settings.pixType}</strong> &nbsp;|&nbsp; Titular: <strong>{settings.businessName}</strong>
           </p>
         </div>
-
-        {/* Invoice Receipt Status */}
-        <div style={{ 
-          border: isPaid ? '1px solid #a7f3d0' : '1px solid #fde68a',
-          background: isPaid ? '#ecfdf5' : '#fffbeb',
-          borderRadius: '10px', 
-          padding: '12px 16px',
-          textAlign: 'center'
-        }}>
-          <p style={{ margin: '0 0 4px', fontSize: '10px', color: '#475569', fontWeight: 600, textTransform: 'uppercase' }}>Situação do Pagamento</p>
-          <span style={{
-            display: 'inline-block',
-            padding: '6px 20px',
-            borderRadius: '20px',
-            fontSize: '14px',
-            fontWeight: 800,
-            background: isPaid ? '#059669' : '#d97706',
-            color: '#fff',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-          }}>
-            {isPaid ? '✓ PAGO / QUITADO' : '⏳ ' + (order.paymentStatus || 'Pendente').toUpperCase()}
-          </span>
-          <p style={{ margin: '6px 0 0', fontSize: '10px', color: '#64748b' }}>
-            Método: <strong>{order.paymentMethod}</strong>
-          </p>
-        </div>
-      </div>
-
-      {/* ── WARRANTY & TERMS TERMS ── */}
-      <div style={{ 
-        border: `1px solid ${brandBorder}`, 
-        borderRadius: '8px', 
-        padding: '10px 14px', 
-        marginBottom: '30px', 
-        background: brandBgLight 
-      }}>
-        <h4 style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>Garantia & Termos de Serviço</h4>
-        <p style={{ margin: 0, fontSize: '10px', color: '#64748b', lineHeight: 1.5 }}>
-          1. <strong>Prazo de Garantia:</strong> Garantia legal de 90 (noventa) dias sobre os serviços executados e peças substituídas, a partir da data de entrega, cobrindo exclusivamente defeitos de fabricação ou de execução técnica.<br />
-          2. <strong>Retirada de Bens:</strong> Os equipamentos prontos devem ser retirados em até 90 dias após a notificação de conclusão, sob pena de serem descartados ou vendidos para custeio do reparo (conforme Artigo 1.275 do Código Civil).
-        </p>
       </div>
 
       {/* ── SIGNATURE BLOCKS ── */}
