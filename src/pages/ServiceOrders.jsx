@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Search, Trash2, Edit2, MessageSquare, FileText } from 'lucide-react';
 import { storage } from '../utils/storage';
 import Modal from '../components/Modal';
@@ -440,11 +441,11 @@ const ServiceOrders = () => {
         </form>
       </Modal>
       {/* Confirm Delete Modal */}
-      {confirmDelete && (
+      {confirmDelete && createPortal(
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000
         }}>
           <div className="glass-panel" style={{ padding: 32, maxWidth: 400, width: '90%', textAlign: 'center' }}>
             <Trash2 size={40} style={{ color: 'var(--danger-color)', marginBottom: 16 }} />
@@ -465,7 +466,8 @@ const ServiceOrders = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

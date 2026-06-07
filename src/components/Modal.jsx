@@ -1,10 +1,11 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div style={{
       position: 'fixed',
       top: 0,
@@ -16,7 +17,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
       display: 'flex',
       alignItems: 'flex-start',
       justifyContent: 'center',
-      zIndex: 1000,
+      zIndex: 10000,
       padding: '40px 20px',
       overflowY: 'auto'
     }} onClick={onClose}>
@@ -40,17 +41,19 @@ const Modal = ({ isOpen, onClose, title, children }) => {
             background: 'none', 
             border: 'none', 
             color: 'var(--text-secondary)', 
-            cursor: 'pointer' 
+            cursor: 'pointer',
+            zIndex: 10
           }}
         >
           <X size={24} />
         </button>
         
-        <h2 style={{ marginBottom: '25px', fontSize: '1.5rem', fontWeight: 'bold' }}>{title}</h2>
+        <h2 style={{ marginBottom: '25px', fontSize: '1.4rem', fontWeight: 'bold' }}>{title}</h2>
         
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

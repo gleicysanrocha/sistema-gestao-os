@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Search, Trash2, Edit2, FileText, CheckCircle } from 'lucide-react';
 import { storage } from '../utils/storage';
 import Modal from '../components/Modal';
@@ -392,8 +393,8 @@ const Budgets = () => {
         )}
       </Modal>
       {/* Confirm Delete */}
-      {confirmDelete && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+      {confirmDelete && createPortal(
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
           <div className="glass-panel" style={{ padding: 32, maxWidth: 380, width: '90%', textAlign: 'center' }}>
             <Trash2 size={36} style={{ color: 'var(--danger-color)', marginBottom: 14 }} />
             <h2 style={{ marginBottom: 8, fontSize: '1.1rem' }}>Excluir orçamento?</h2>
@@ -403,12 +404,13 @@ const Budgets = () => {
               <button onClick={confirmDoDelete} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: 'var(--danger-color)', color: '#fff', fontFamily: 'inherit', fontWeight: 600, cursor: 'pointer' }}>Excluir</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Confirm Approve */}
-      {confirmApprove && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+      {confirmApprove && createPortal(
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
           <div className="glass-panel" style={{ padding: 32, maxWidth: 380, width: '90%', textAlign: 'center' }}>
             <CheckCircle size={36} style={{ color: 'var(--success-color)', marginBottom: 14 }} />
             <h2 style={{ marginBottom: 8, fontSize: '1.1rem' }}>Converter em Ordem de Serviço?</h2>
@@ -418,7 +420,8 @@ const Budgets = () => {
               <button onClick={confirmDoApprove} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: 'var(--success-color)', color: '#fff', fontFamily: 'inherit', fontWeight: 600, cursor: 'pointer' }}>Confirmar</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
