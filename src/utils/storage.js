@@ -279,8 +279,8 @@ export const storage = {
   getBudgets: () => getFromStorage(STORAGE_KEYS.BUDGETS),
   addBudget: (budget) => {
     const budgets = storage.getBudgets();
-    const nextId = budgets.length > 0 ? Math.max(...budgets.map(b => parseInt(b.id) || 0)) + 1 : 2001;
-    const finalId = Math.max(nextId, 2001).toString();
+    const nextId = budgets.length > 0 ? Math.max(...budgets.map(b => parseInt(b.id) || 0)) + 1 : 1001;
+    const finalId = Math.max(nextId, 1001).toString();
     const newBudget = { 
       ...budget, 
       id: budget.id ? budget.id.toString() : finalId, 
@@ -460,13 +460,13 @@ export const storage = {
           businessDescription: cloudSettings?.businessDescription || '',
           systemName: cloudSettings?.systemName || 'Gestão Gleicy Rocha',
           theme: cloudSettings?.theme || 'dark',
-          idMigrationDone: cloudSettings?.idMigrationDone || false
+          idMigrationDoneV2: cloudSettings?.idMigrationDoneV2 || false
         };
         saveToStorage(STORAGE_KEYS.SETTINGS, settingsToSave);
 
         // Se a migração de IDs não estiver marcada na nuvem, executar localmente e salvar na nuvem
-        if (!settingsToSave.idMigrationDone) {
-          console.log('A nuvem não possui migração de IDs concluída. Executando migração...');
+        if (!settingsToSave.idMigrationDoneV2) {
+          console.log('A nuvem não possui migração de IDs V2 concluída. Executando migração...');
           await storage.runLocalMigration();
         }
 
@@ -478,14 +478,14 @@ export const storage = {
     }
   },
 
-  // Método de migração única de IDs sequenciais e ordenação cronológica
+  // Método de migração única de IDs sequenciais e ordenação cronológica V2 (Orçamentos em 1001+)
   runLocalMigration: async (batchToCommit = null) => {
     const settings = storage.getSettings();
-    if (settings.idMigrationDone) {
+    if (settings.idMigrationDoneV2) {
       return;
     }
 
-    console.log('Iniciando migração de IDs sequenciais e ordenação cronológica...');
+    console.log('Iniciando migração de IDs sequenciais (OS e Orçamentos em 1001+)...');
 
     // 1. Ordens de Serviço (OS)
     const orders = storage.getOrders();
@@ -518,7 +518,7 @@ export const storage = {
     });
     
     const migratedBudgets = budgets.map((budget, index) => {
-      const newId = (2001 + index).toString();
+      const newId = (1001 + index).toString(); // Inicia em 1001 conforme OS
       return {
         ...budget,
         id: newId
@@ -547,11 +547,11 @@ export const storage = {
     saveToStorage(STORAGE_KEYS.BUDGETS, migratedBudgets);
     saveToStorage(STORAGE_KEYS.TRANSACTIONS, migratedTransactions);
 
-    // Marcar migração como concluída
-    settings.idMigrationDone = true;
+    // Marcar migração V2 como concluída
+    settings.idMigrationDoneV2 = true;
     saveToStorage(STORAGE_KEYS.SETTINGS, settings);
 
-    console.log('Migração de IDs concluída localmente.');
+    console.log('Migração de IDs V2 concluída localmente.');
 
     // Sincronizar com Firestore se o usuário está logado
     const userId = getUserId();
@@ -573,10 +573,10 @@ export const storage = {
 
         if (!batchToCommit) {
           await batch.commit();
-          console.log('Sincronização da migração enviada ao Firestore com sucesso.');
+          console.log('Sincronização da migração V2 enviada ao Firestore com sucesso.');
         }
       } catch (err) {
-        console.error('Erro ao salvar migração de IDs no Firestore:', err);
+        console.error('Erro ao salvar migração de IDs V2 no Firestore:', err);
       }
     }
   },
